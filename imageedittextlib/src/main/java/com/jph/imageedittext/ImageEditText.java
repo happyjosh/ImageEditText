@@ -20,14 +20,21 @@ import java.util.List;
 public class ImageEditText extends EditText {
     public ImageEditText(Context context) {
         super(context);
+        init();
     }
 
     public ImageEditText(Context context, AttributeSet attrs) {
         super(context, attrs);
+        init();
     }
 
     public ImageEditText(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        init();
+    }
+
+    private void init() {
+//        setMovementMethod(new ScrollingMovementMethod());
     }
 
     public void insertLocalImage(ILocalPic pic) {
@@ -81,19 +88,6 @@ public class ImageEditText extends EditText {
             editable.insert(index, spannableString);
         }
         editable.insert(index + spannableString.length(), "\n");
-    }
-
-    @Override
-    public boolean bringPointIntoView(int offset) {
-//        if ("onPreDraw".equals(new Throwable().getStackTrace()[0].getMethodName())) {
-//            return true;
-//        }
-        return super.bringPointIntoView(offset);
-    }
-
-    @Override
-    public boolean onPreDraw() {
-        return super.onPreDraw();
     }
 
     /**

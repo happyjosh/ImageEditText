@@ -4,7 +4,6 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
-import android.text.InputFilter;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -26,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         final ImageEditText edt = (ImageEditText) findViewById(R.id.main_edt);
-        edt.setFilters(new InputFilter[]{new InputFilter.LengthFilter(100)});
+//        edt.setFilters(new InputFilter[]{new InputFilter.LengthFilter(100)});
         findViewById(R.id.main_btn_insert_pic).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
