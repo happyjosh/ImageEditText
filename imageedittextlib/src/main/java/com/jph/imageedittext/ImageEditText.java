@@ -16,6 +16,7 @@ import java.util.List;
 
 /**
  * 可直接显示图片和附件的EditText
+ * 因EditText滑动无弹性,使用时需在外层嵌套ScrollView,可使用fillViewPort设置铺满
  * Created by jph on 2017/3/13.
  */
 public class ImageEditText extends EditText {
