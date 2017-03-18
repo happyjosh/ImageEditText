@@ -24,7 +24,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="50dp"/>
 
-            <com.jph.imageedittext.ImageEditText
+            <com.jph.imageedittext.sample.CustomImageEditText
                 android:id="@+id/main_edt"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"

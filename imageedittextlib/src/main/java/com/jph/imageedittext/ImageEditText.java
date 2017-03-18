@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 可直接显示图片的EditText
+ * 可直接显示图片和附件的EditText
  * Created by jph on 2017/3/13.
  */
 public class ImageEditText extends EditText {
@@ -77,7 +77,7 @@ public class ImageEditText extends EditText {
     }
 
     public void insertExtra(IExtra extra) {
-        ISpan extraSpan = new ExtraSpan(extra);
+        ISpan extraSpan = createExtraSpan(extra);
         String replaceCode = extraSpan.getReplaceCode();
         SpannableString spannableString = new SpannableString(replaceCode);
         spannableString.setSpan(extraSpan, 0, replaceCode.length(),
@@ -97,6 +97,16 @@ public class ImageEditText extends EditText {
             editable.insert(index, spannableString);
         }
         editable.insert(index + spannableString.length(), "\n");
+    }
+
+    /**
+     * 可复写该方法自定义ExtraSpan来控制附件的样式
+     *
+     * @param extra
+     * @return
+     */
+    protected ISpan createExtraSpan(IExtra extra) {
+        return new ExtraSpan(extra);
     }
 
     /**
