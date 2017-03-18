@@ -7,6 +7,7 @@ import android.graphics.Matrix;
 import android.text.Editable;
 import android.text.Spannable;
 import android.text.SpannableString;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.widget.EditText;
 
@@ -62,6 +63,11 @@ public class ImageEditText extends EditText {
         // 将选择的图片追加到EditText中光标所在位置
         int index = getSelectionStart(); // 获取光标所在位置
         Editable editable = getEditableText();
+
+        if (!selectionStartInLine()) {
+            editable.insert(index, "\n");
+            index++;
+        }
         if (index < 0 || index >= editable.length()) {
             editable.append(spannableString);
         } else {
@@ -80,8 +86,11 @@ public class ImageEditText extends EditText {
         // 将选择的图片追加到EditText中光标所在位置
         int index = getSelectionStart(); // 获取光标所在位置
         Editable editable = getEditableText();
-        editable.insert(index, "\n");
-        index++;
+
+        if (!selectionStartInLine()) {
+            editable.insert(index, "\n");
+            index++;
+        }
         if (index < 0 || index >= editable.length()) {
             editable.append(spannableString);
         } else {
@@ -152,6 +161,115 @@ public class ImageEditText extends EditText {
         }
 
         return extraList;
+    }
+
+    /**
+     * 得到所有小块(文字，附件，本地图片)的集合
+     *
+     * @return 返回集合中的数据类型可能会有String, ILocalPic, IExtra
+     */
+    public List getPatches() {
+        Editable editable = getText();
+        //得到所有不是普通文字的数据
+        ISpan[] ss = editable.getSpans(0, editable.length(), ISpan.class);
+
+        if (editable.length() == 0) {
+            //无内容
+            return null;
+        }
+        List list = new ArrayList<>();
+        if (ss.length == 0) {
+            //只有普通文字内容
+            list.add(editable.toString());
+            return list;
+        }
+
+        int previousEnd = -1;//上一个碎片的结束位置
+        for (int i = 0; i < ss.length; i++) {
+            ISpan s = ss[i];
+            int start = editable.getSpanStart(s);
+            int end = editable.getSpanEnd(s);
+            if (i == 0 && start > 0) {
+                //第一个碎片&&它前面有文字
+                //会为非位子碎片加上换行符
+                String patch = trimEndEnter(editable.subSequence(0, start).toString());
+                if (!TextUtils.isEmpty(patch)) {
+                    //非文字碎片和碎片之间的换行去除换行符会为""
+                    list.add(patch);
+                }
+            } else if (i != 0 && start > previousEnd) {
+                //不是第一个碎片&&且和上一个碎片之间有普通文字
+                String patch = trimEnter(editable.subSequence(previousEnd, start).toString());
+                if (!TextUtils.isEmpty(patch)) {
+                    list.add(patch);
+                }
+            }
+
+            list.add(s);
+
+            if (i == ss.length - 1 && end < editable.length()) {
+                //最后一个碎片&&它后面有文字
+                String patch = trimStartEnter(editable.subSequence(end, editable.length()).toString());
+                if (!TextUtils.isEmpty(patch)) {
+                    list.add(patch);
+                }
+            }
+            previousEnd = end;
+        }
+
+        return list;
+    }
+
+    /**
+     * 去除开始和结尾的换行符
+     *
+     * @param str
+     * @return
+     */
+    private String trimEnter(String str) {
+        return trimEndEnter(trimStartEnter(str));
+    }
+
+    /**
+     * 去除开始的换行符
+     *
+     * @param str
+     * @return
+     */
+    private String trimStartEnter(String str) {
+        if (str.startsWith("\n")) {
+            return str.substring(1, str.length());
+        }
+
+        return str;
+    }
+
+    /**
+     * 去除结尾的换行符
+     *
+     * @param str
+     * @return
+     */
+    private String trimEndEnter(String str) {
+        if (str.endsWith("\n")) {
+            return str.substring(0, str.length() - 1);
+        }
+
+        return str;
+    }
+
+    /**
+     * 光标是否在行的第一位
+     *
+     * @return
+     */
+    private boolean selectionStartInLine() {
+        if (length() <= 0) {
+            return true;
+        }
+
+        int selectionStart = getSelectionStart();
+        return "\n".equals(getText().subSequence(selectionStart - 1, selectionStart).toString());
     }
 
     public interface ISpan {
