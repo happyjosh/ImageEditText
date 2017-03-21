@@ -274,7 +274,7 @@ public class ImageEditText extends EditText {
      *
      * @return
      */
-    private boolean selectionStartInLine() {
+    protected boolean selectionStartInLine() {
         if (length() <= 0) {
             return true;
         }

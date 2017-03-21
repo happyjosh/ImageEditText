@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "com.jph.imageedittext.sample"
-        minSdkVersion 15
+        minSdkVersion 14
         targetSdkVersion 24
         versionCode 1
         versionName "1.0.0"
@@ -28,7 +28,8 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     compile 'com.android.support:appcompat-v7:24.2.1'
-    compile project(':imageedittextlib')
+    compile 'com.jph:imageedittextlib:1.0.2'
+//    compile project(':imageedittextlib')
 }
 
 
