@@ -216,7 +216,7 @@ public class ImageEditText extends EditText {
                 }
             }
 
-            list.add(s);
+            addSpanContent2List(s, list);
 
             if (i == ss.length - 1 && end < editable.length()) {
                 //最后一个碎片&&它后面有文字
@@ -229,6 +229,20 @@ public class ImageEditText extends EditText {
         }
 
         return list;
+    }
+
+    /**
+     * 将span的内容加入list
+     *
+     * @param span
+     * @param list
+     */
+    private void addSpanContent2List(ISpan span, List list) {
+        if (span instanceof LocalPicSpan) {
+            list.add(((LocalPicSpan) span).getPic());
+        } else if (span instanceof ExtraSpan) {
+            list.add(((ExtraSpan) span).getExtra());
+        }
     }
 
     /**

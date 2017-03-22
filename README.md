@@ -6,7 +6,7 @@
 使用方式
 
 ```java
-compile 'com.jph:imageedittextlib:1.0.2' 
+compile 'com.jph:imageedittextlib:1.0.3'
 ```
 
 ```java
