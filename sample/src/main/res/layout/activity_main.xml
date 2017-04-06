@@ -43,17 +43,28 @@
         android:layout_alignParentBottom="true"
         android:orientation="horizontal">
 
-        <Button
-            android:id="@+id/main_btn_insert_pic"
+        <TextView
+            android:id="@+id/main_btn_insert_pic_net"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@color/colorPrimary"
             android:gravity="center"
             android:padding="10dp"
-            android:text="图片"
-            android:textSize="16sp"/>
+            android:text="网图"
+            android:textSize="14sp"/>
 
-        <Button
+        <TextView
+            android:id="@+id/main_btn_insert_pic_local"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="12dp"
+            android:background="@color/colorPrimary"
+            android:gravity="center"
+            android:padding="10dp"
+            android:text="本地图"
+            android:textSize="14sp"/>
+
+        <TextView
             android:id="@+id/main_btn_insert_post"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -62,10 +73,10 @@
             android:gravity="center"
             android:padding="10dp"
             android:text="帖子"
-            android:textSize="16sp"/>
+            android:textSize="14sp"/>
 
 
-        <Button
+        <TextView
             android:id="@+id/main_btn_other"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -73,8 +84,8 @@
             android:background="@color/colorPrimary"
             android:gravity="center"
             android:padding="10dp"
-            android:text="Other"
-            android:textSize="16sp"/>
+            android:text="其他"
+            android:textSize="14sp"/>
     </LinearLayout>
 
 

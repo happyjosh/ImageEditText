@@ -6,8 +6,13 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.util.AttributeSet;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.drawable.GlideDrawable;
+import com.bumptech.glide.request.animation.GlideAnimation;
+import com.bumptech.glide.request.target.SimpleTarget;
 import com.jph.imageedittext.ExtraSpan;
 import com.jph.imageedittext.IExtra;
+import com.jph.imageedittext.INetPic;
 import com.jph.imageedittext.ImageEditText;
 
 /**
@@ -52,4 +57,13 @@ public class CustomImageEditText extends ImageEditText {
         }
     }
 
+    @Override
+    public void loadImage(final ISpan placeImageSpan, final INetPic netPic) {
+        Glide.with(getContext()).load(netPic.getXUrl()).into(new SimpleTarget<GlideDrawable>() {
+            @Override
+            public void onResourceReady(GlideDrawable resource, GlideAnimation<? super GlideDrawable> glideAnimation) {
+                onNetImageLoaded(resource, placeImageSpan, netPic);
+            }
+        });
+    }
 }

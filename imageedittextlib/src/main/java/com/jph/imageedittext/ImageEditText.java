@@ -4,6 +4,8 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.text.Editable;
 import android.text.Spannable;
 import android.text.SpannableString;
@@ -19,7 +21,7 @@ import java.util.List;
  * 因EditText滑动无弹性,使用时需在外层嵌套ScrollView,可使用fillViewPort设置铺满
  * Created by jph on 2017/3/13.
  */
-public class ImageEditText extends EditText {
+public abstract class ImageEditText extends EditText {
     public ImageEditText(Context context) {
         super(context);
         init();
@@ -38,6 +40,62 @@ public class ImageEditText extends EditText {
     private void init() {
 //        setMovementMethod(new ScrollingMovementMethod());
     }
+
+    public void insertNetImage(INetPic netPic) {
+        NetPicSpan placeImageSpan = new NetPicSpan(new BitmapDrawable(getResources(),
+                (Bitmap) null), netPic);//为加载图片先占位
+        // 创建一个SpannableString对象，以便插入用ImageSpan对象封装的图像
+        SpannableString spannableString = new SpannableString(placeImageSpan.getReplaceCode());
+        spannableString.setSpan(placeImageSpan, 0, placeImageSpan.getReplaceCode().length(),
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        // 将选择的图片追加到EditText中光标所在位置
+        int index = getSelectionStart(); // 获取光标所在位置
+        Editable editable = getEditableText();
+
+        if (!selectionStartInLine()) {
+            editable.insert(index, "\n");
+            index++;
+        }
+        if (index < 0 || index >= editable.length()) {
+            editable.append(spannableString);
+        } else {
+            editable.insert(index, spannableString);
+        }
+        editable.insert(index + spannableString.length(), "\n");
+
+        loadImage(placeImageSpan, netPic);//异步加载图片
+    }
+
+    /**
+     * 复写调用异步加载图片,加载成功后调用onNetImageLoaded替换占位的span
+     *
+     * @param placeImageSpan
+     */
+    public abstract void loadImage(final ISpan placeImageSpan, final INetPic netPic);
+
+    /**
+     * 图片异步加载成功后手动调用
+     *
+     * @param drawable
+     * @param placeImageSpan
+     * @param netPic
+     */
+    public void onNetImageLoaded(Drawable drawable, ISpan placeImageSpan, INetPic netPic) {
+        drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
+        NetPicSpan imageSpan = new NetPicSpan(drawable, netPic);
+
+        //加载出来的图片Span替换掉占位的Span
+        SpannableString spannableString = new SpannableString(imageSpan.getReplaceCode());
+        spannableString.setSpan(imageSpan, 0, imageSpan.getReplaceCode().length(),
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        Editable editable = getEditableText();
+        int start = editable.getSpanStart(placeImageSpan);
+        int end = editable.getSpanEnd(placeImageSpan);
+        getEditableText().replace(start, end, spannableString);
+        editable.removeSpan(placeImageSpan);
+    }
+
 
     public void insertLocalImage(ILocalPic pic) {
         Bitmap loadedImage = BitmapFactory.decodeFile(pic.getXPath());
@@ -111,70 +169,6 @@ public class ImageEditText extends EditText {
     }
 
     /**
-     * 获取附件个数
-     *
-     * @return
-     */
-    public int getExtraSpanCount() {
-        Editable editable = getText();
-        ExtraSpan[] es = editable.getSpans(0, editable.length(), ExtraSpan.class);
-        return es.length;
-    }
-
-    /**
-     * 获取本地图片个数
-     *
-     * @return
-     */
-    public int getPicSpanCount() {
-        Editable editable = getText();
-        LocalPicSpan[] es = editable.getSpans(0, editable.length(), LocalPicSpan.class);
-        return es.length;
-    }
-
-    /**
-     * 得到所有附件
-     *
-     * @return
-     */
-    public List<IExtra> getExtras() {
-        Editable editable = getText();
-        ExtraSpan[] es = editable.getSpans(0, editable.length(), ExtraSpan.class);
-        if (es.length == 0) {
-            return null;
-        }
-
-        List<IExtra> extraList = new ArrayList<>();
-        for (ExtraSpan e :
-                es) {
-            extraList.add(e.getExtra());
-        }
-
-        return extraList;
-    }
-
-    /**
-     * 得到所有本地图片
-     *
-     * @return
-     */
-    public List<ILocalPic> getLocalPics() {
-        Editable editable = getText();
-        LocalPicSpan[] ps = editable.getSpans(0, editable.length(), LocalPicSpan.class);
-        if (ps.length == 0) {
-            return null;
-        }
-
-        List<ILocalPic> extraList = new ArrayList<>();
-        for (LocalPicSpan p :
-                ps) {
-            extraList.add(p.getPic());
-        }
-
-        return extraList;
-    }
-
-    /**
      * 得到所有小块(文字，附件，本地图片)的集合
      *
      * @return 返回集合中的数据类型可能会有String, ILocalPic, IExtra
@@ -238,8 +232,10 @@ public class ImageEditText extends EditText {
      * @param list
      */
     private void addSpanContent2List(ISpan span, List list) {
-        if (span instanceof LocalPicSpan) {
-            list.add(((LocalPicSpan) span).getPic());
+        if (span instanceof NetPicSpan) {
+            list.add(((NetPicSpan) span).getNetPic());
+        } else if (span instanceof LocalPicSpan) {
+            list.add(((LocalPicSpan) span).getLocalPic());
         } else if (span instanceof ExtraSpan) {
             list.add(((ExtraSpan) span).getExtra());
         }

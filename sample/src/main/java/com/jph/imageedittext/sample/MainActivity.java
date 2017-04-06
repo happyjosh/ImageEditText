@@ -19,12 +19,20 @@ public class MainActivity extends AppCompatActivity {
 
         final ImageEditText edt = (ImageEditText) findViewById(R.id.main_edt);
 //        edt.setFilters(new InputFilter[]{new InputFilter.LengthFilter(100)});
-        findViewById(R.id.main_btn_insert_pic).setOnClickListener(new View.OnClickListener() {
+
+        findViewById(R.id.main_btn_insert_pic_net).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String url = "http://wx4.sinaimg.cn/mw600/9f0e9ec6gy1febrx44i3kj20b40b4dg6.jpg";
+                edt.insertNetImage(new NetPic(url));
+            }
+        });
+
+        findViewById(R.id.main_btn_insert_pic_local).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String imgPath = Environment.getExternalStorageDirectory().getPath() + "/test.jpg";
                 edt.insertLocalImage(new LocalPic(imgPath));
-
             }
         });
 

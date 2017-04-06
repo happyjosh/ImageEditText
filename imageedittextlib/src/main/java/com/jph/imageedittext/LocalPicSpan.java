@@ -10,19 +10,19 @@ import android.text.style.ImageSpan;
  */
 public class LocalPicSpan extends ImageSpan implements ImageEditText.ISpan {
 
-    private ILocalPic mPic;
+    private ILocalPic mLocalPic;
 
-    public LocalPicSpan(Context context, Bitmap b, ILocalPic pic) {
+    public LocalPicSpan(Context context, Bitmap b, ILocalPic localPic) {
         super(context, b);
-        mPic = pic;
+        mLocalPic = localPic;
     }
 
     @Override
     public String getReplaceCode() {
-        return "<img src=\"" + mPic.getXPath() + "\" />";
+        return "<local_img src=\"" + mLocalPic.getXPath() + "\" />";
     }
 
-    public ILocalPic getPic() {
-        return mPic;
+    public ILocalPic getLocalPic() {
+        return mLocalPic;
     }
 }
