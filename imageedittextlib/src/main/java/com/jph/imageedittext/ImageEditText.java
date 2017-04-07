@@ -9,6 +9,7 @@ import android.graphics.drawable.Drawable;
 import android.text.Editable;
 import android.text.Spannable;
 import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.widget.EditText;
@@ -45,9 +46,8 @@ public abstract class ImageEditText extends EditText {
         NetPicSpan placeImageSpan = new NetPicSpan(new BitmapDrawable(getResources(),
                 (Bitmap) null), netPic);//为加载图片先占位
         // 创建一个SpannableString对象，以便插入用ImageSpan对象封装的图像
-        SpannableString spannableString = new SpannableString(placeImageSpan.getReplaceCode());
-        spannableString.setSpan(placeImageSpan, 0, placeImageSpan.getReplaceCode().length(),
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        SpannableString spannableString = createNetPicSpannable(placeImageSpan);
+
         // 将选择的图片追加到EditText中光标所在位置
         int index = getSelectionStart(); // 获取光标所在位置
         Editable editable = getEditableText();
@@ -63,7 +63,7 @@ public abstract class ImageEditText extends EditText {
         }
         editable.insert(index + spannableString.length(), "\n");
 
-        loadImage(placeImageSpan, netPic);//异步加载图片
+        loadImage(placeImageSpan);//异步加载图片
     }
 
     /**
@@ -71,7 +71,7 @@ public abstract class ImageEditText extends EditText {
      *
      * @param placeImageSpan
      */
-    public abstract void loadImage(final ISpan placeImageSpan, final INetPic netPic);
+    public abstract void loadImage(final NetPicSpan placeImageSpan);
 
     /**
      * 图片异步加载成功后手动调用
@@ -98,9 +98,57 @@ public abstract class ImageEditText extends EditText {
 
 
     public void insertLocalImage(ILocalPic pic) {
+        SpannableString spannableString = createLocalPicSpannable(pic);
+        if (spannableString == null) {
+            return;
+        }
+
+        // 将选择的图片追加到EditText中光标所在位置
+        int index = getSelectionStart(); // 获取光标所在位置
+        Editable editable = getEditableText();
+
+        if (!selectionStartInLine()) {
+            editable.insert(index, "\n");
+            index++;
+        }
+        if (index < 0 || index >= editable.length()) {
+            editable.append(spannableString);
+        } else {
+            editable.insert(index, spannableString);
+        }
+        editable.insert(index + spannableString.length(), "\n");
+    }
+
+    public void insertExtra(IExtra extra) {
+        SpannableString spannableString = createExtraSpannable(extra);
+
+        // 将选择的图片追加到EditText中光标所在位置
+        int index = getSelectionStart(); // 获取光标所在位置
+        Editable editable = getEditableText();
+
+        if (!selectionStartInLine()) {
+            editable.insert(index, "\n");
+            index++;
+        }
+        if (index < 0 || index >= editable.length()) {
+            editable.append(spannableString);
+        } else {
+            editable.insert(index, spannableString);
+        }
+        editable.insert(index + spannableString.length(), "\n");
+    }
+
+    private SpannableString createNetPicSpannable(ISpan placeImageSpan) {
+        SpannableString spannableString = new SpannableString(placeImageSpan.getReplaceCode());
+        spannableString.setSpan(placeImageSpan, 0, placeImageSpan.getReplaceCode().length(),
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        return spannableString;
+    }
+
+    private SpannableString createLocalPicSpannable(ILocalPic pic) {
         Bitmap loadedImage = BitmapFactory.decodeFile(pic.getXPath());
         if (loadedImage == null) {
-            return;
+            return null;
         }
 
         int width = loadedImage.getWidth();
@@ -119,43 +167,16 @@ public abstract class ImageEditText extends EditText {
         SpannableString spannableString = new SpannableString(imageSpan.getReplaceCode());
         spannableString.setSpan(imageSpan, 0, imageSpan.getReplaceCode().length(),
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        // 将选择的图片追加到EditText中光标所在位置
-        int index = getSelectionStart(); // 获取光标所在位置
-        Editable editable = getEditableText();
-
-        if (!selectionStartInLine()) {
-            editable.insert(index, "\n");
-            index++;
-        }
-        if (index < 0 || index >= editable.length()) {
-            editable.append(spannableString);
-        } else {
-            editable.insert(index, spannableString);
-        }
-        editable.insert(index + spannableString.length(), "\n");
+        return spannableString;
     }
 
-    public void insertExtra(IExtra extra) {
+    private SpannableString createExtraSpannable(IExtra extra) {
         ISpan extraSpan = createExtraSpan(extra);
         String replaceCode = extraSpan.getReplaceCode();
         SpannableString spannableString = new SpannableString(replaceCode);
         spannableString.setSpan(extraSpan, 0, replaceCode.length(),
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-
-        // 将选择的图片追加到EditText中光标所在位置
-        int index = getSelectionStart(); // 获取光标所在位置
-        Editable editable = getEditableText();
-
-        if (!selectionStartInLine()) {
-            editable.insert(index, "\n");
-            index++;
-        }
-        if (index < 0 || index >= editable.length()) {
-            editable.append(spannableString);
-        } else {
-            editable.insert(index, spannableString);
-        }
-        editable.insert(index + spannableString.length(), "\n");
+        return spannableString;
     }
 
     /**
@@ -166,6 +187,52 @@ public abstract class ImageEditText extends EditText {
      */
     protected ISpan createExtraSpan(IExtra extra) {
         return new ExtraSpan(extra);
+    }
+
+    /**
+     * 设置分散的内容
+     *
+     * @param list
+     */
+    public void setPatches(List list) {
+        SpannableStringBuilder ssb = new SpannableStringBuilder("");
+        final List<NetPicSpan> placeSpanList = new ArrayList<>();
+        for (Object patch :
+                list) {
+            if (patch instanceof INetPic) {
+                INetPic netPic = (INetPic) patch;
+                Drawable d = new BitmapDrawable(getResources(),
+                        (Bitmap) null);
+//                d.setBounds(0, 0, 1, 400);
+                NetPicSpan placeImageSpan = new NetPicSpan(d, netPic);//为加载图片先占位
+                ssb.append("\n");
+                ssb.append(createNetPicSpannable(placeImageSpan));
+                placeSpanList.add(placeImageSpan);
+//                loadImage(placeImageSpan, netPic);
+            } else if (patch instanceof ILocalPic) {
+                SpannableString localSS = createLocalPicSpannable((ILocalPic) patch);
+                if (localSS == null) {
+                    continue;
+                }
+                ssb.append("\n");
+                ssb.append(localSS);
+            } else if (patch instanceof IExtra) {
+                ssb.append("\n");
+                ssb.append(createExtraSpannable((IExtra) patch));
+            } else if (patch instanceof String) {
+                ssb.append("\n");
+                ssb.append((String) patch);
+            }
+        }
+
+        setText(ssb);
+
+        //内容追加到输入框内后才开始加载图片
+        for (NetPicSpan placeSpan :
+                placeSpanList) {
+            loadImage(placeSpan);
+        }
+
     }
 
     /**

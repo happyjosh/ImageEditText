@@ -9,6 +9,7 @@
     >
 
     <ScrollView
+        android:id="@+id/main_scroll"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@+id/main_layout_insert"
@@ -30,6 +31,7 @@
                 android:layout_height="match_parent"
                 android:background="@color/white"
                 android:gravity="top"
+                android:isScrollContainer="false"
                 android:textColor="@color/black"
                 android:textCursorDrawable="@null"
                 android:textSize="20sp"/>
@@ -75,6 +77,16 @@
             android:text="帖子"
             android:textSize="14sp"/>
 
+        <TextView
+            android:id="@+id/main_btn_multi"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="12dp"
+            android:background="@color/colorPrimary"
+            android:gravity="center"
+            android:padding="10dp"
+            android:text="多个"
+            android:textSize="14sp"/>
 
         <TextView
             android:id="@+id/main_btn_other"

@@ -14,6 +14,7 @@ import com.jph.imageedittext.ExtraSpan;
 import com.jph.imageedittext.IExtra;
 import com.jph.imageedittext.INetPic;
 import com.jph.imageedittext.ImageEditText;
+import com.jph.imageedittext.NetPicSpan;
 
 /**
  * Created by jph on 2017/3/18.
@@ -58,7 +59,8 @@ public class CustomImageEditText extends ImageEditText {
     }
 
     @Override
-    public void loadImage(final ISpan placeImageSpan, final INetPic netPic) {
+    public void loadImage(final NetPicSpan placeImageSpan) {
+        final INetPic netPic = placeImageSpan.getNetPic();
         Glide.with(getContext()).load(netPic.getXUrl()).into(new SimpleTarget<GlideDrawable>() {
             @Override
             public void onResourceReady(GlideDrawable resource, GlideAnimation<? super GlideDrawable> glideAnimation) {

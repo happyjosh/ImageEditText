@@ -8,6 +8,7 @@ import android.widget.Toast;
 
 import com.jph.imageedittext.ImageEditText;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -48,6 +49,22 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        findViewById(R.id.main_btn_multi).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                List list = new ArrayList();
+                String url = "http://wx1.sinaimg.cn/mw600/6298156bgy1fedynvfaqrj213r0qikjl.jpg";
+                String imgPath = Environment.getExternalStorageDirectory().getPath() + "/test.jpg";
+                for (int i = 0; i < 10; i++) {
+                    list.add(new NetPic(url));
+                    list.add(new LocalPic(imgPath));
+                    list.add("九分裤了圣诞节疯狂了圣诞节疯狂了圣诞节疯狂了圣诞节疯狂就圣诞快乐发简历上岛咖啡饥渴了圣诞节福利圣诞节疯狂了圣诞节分克里斯打飞机 ");
+                    list.add(new Extra(i, "这是测试帖子" + i));
+                }
+                edt.setPatches(list);
+            }
+        });
+
         findViewById(R.id.main_btn_other).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -63,6 +80,6 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(v.getContext(), "分成小段数：" + list.size(), Toast.LENGTH_LONG).show();
             }
         });
-    }
 
+    }
 }
