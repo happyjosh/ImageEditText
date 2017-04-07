@@ -1,5 +1,7 @@
 package com.jph.imageedittext;
 
+import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.text.style.ImageSpan;
 
@@ -11,6 +13,11 @@ public class NetPicSpan extends ImageSpan implements ImageEditText.ISpan {
 
     public NetPicSpan(Drawable d, INetPic netPic) {
         super(d);
+        this.mNetPic = netPic;
+    }
+
+    public NetPicSpan(Context context, Bitmap b, INetPic netPic) {
+        super(context, b);
         this.mNetPic = netPic;
     }
 

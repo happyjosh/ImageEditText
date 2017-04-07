@@ -78,15 +78,35 @@ public abstract class ImageEditText extends EditText {
      *
      * @param drawable
      * @param placeImageSpan
-     * @param netPic
      */
-    public void onNetImageLoaded(Drawable drawable, ISpan placeImageSpan, INetPic netPic) {
-        drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
-        NetPicSpan imageSpan = new NetPicSpan(drawable, netPic);
+    public void onNetImageLoaded(Drawable drawable, NetPicSpan placeImageSpan) {
+        NetPicSpan imageSpan = new NetPicSpan(compressDrawable(drawable),
+                placeImageSpan.getNetPic());
 
-        //加载出来的图片Span替换掉占位的Span
-        SpannableString spannableString = new SpannableString(imageSpan.getReplaceCode());
-        spannableString.setSpan(imageSpan, 0, imageSpan.getReplaceCode().length(),
+        onNetImageLoaded(imageSpan, placeImageSpan);
+    }
+
+    /**
+     * 图片异步加载成功后手动调用
+     *
+     * @param b
+     * @param placeImageSpan
+     */
+    public void onNetImageLoaded(Bitmap b, NetPicSpan placeImageSpan) {
+        NetPicSpan imageSpan = new NetPicSpan(getContext(), compressBitmap(b), placeImageSpan.getNetPic());
+
+        onNetImageLoaded(imageSpan, placeImageSpan);
+    }
+
+    /**
+     * 加载出来的图片Span替换掉占位的Span
+     *
+     * @param newImageSpan
+     * @param placeImageSpan
+     */
+    private void onNetImageLoaded(NetPicSpan newImageSpan, NetPicSpan placeImageSpan) {
+        SpannableString spannableString = new SpannableString(newImageSpan.getReplaceCode());
+        spannableString.setSpan(newImageSpan, 0, newImageSpan.getReplaceCode().length(),
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
         Editable editable = getEditableText();
@@ -151,16 +171,8 @@ public abstract class ImageEditText extends EditText {
             return null;
         }
 
-        int width = loadedImage.getWidth();
+        loadedImage = compressBitmap(loadedImage);
 
-        if (width > getWidth()) {
-            //超出了控件宽度需要缩放
-            float scaleWidth = ((float) getWidth()) / width;
-            // 取得想要缩放的matrix参数
-            Matrix matrix = new Matrix();
-            matrix.postScale(scaleWidth, scaleWidth);
-            loadedImage = Bitmap.createBitmap(loadedImage, 0, 0, width, loadedImage.getHeight(), matrix, true);
-        }
 
         ISpan imageSpan = new LocalPicSpan(getContext(), loadedImage, pic);
         // 创建一个SpannableString对象，以便插入用ImageSpan对象封装的图像
@@ -347,6 +359,40 @@ public abstract class ImageEditText extends EditText {
     }
 
     /**
+     * 限制图片尺寸小于屏幕宽度
+     *
+     * @param loadedImage
+     * @return
+     */
+    private Bitmap compressBitmap(Bitmap loadedImage) {
+        int width = loadedImage.getWidth();
+
+        if (width > getWidth()) {
+            //超出了控件宽度需要缩放
+            float scaleWidth = ((float) getWidth()) / width;
+            // 取得想要缩放的matrix参数
+            Matrix matrix = new Matrix();
+            matrix.postScale(scaleWidth, scaleWidth);
+            loadedImage = Bitmap.createBitmap(loadedImage, 0, 0, width, loadedImage.getHeight(), matrix, true);
+        }
+
+        return loadedImage;
+    }
+
+    private Drawable compressDrawable(Drawable d) {
+        int width = d.getIntrinsicWidth();
+        int height = d.getIntrinsicHeight();
+        if (width > getWidth()) {
+            float ratio = ((float) height) / width;
+            //超出了控件宽度需要缩放
+            width = getWidth();
+            height = (int) (getWidth() * ratio);
+        }
+        d.setBounds(0, 0, width, height);
+        return d;
+    }
+
+    /**
      * 光标是否在行的第一位
      *
      * @return
@@ -357,6 +403,9 @@ public abstract class ImageEditText extends EditText {
         }
 
         int selectionStart = getSelectionStart();
+        if (selectionStart <= 0) {
+            return true;
+        }
         return "\n".equals(getText().subSequence(selectionStart - 1, selectionStart).toString());
     }
 

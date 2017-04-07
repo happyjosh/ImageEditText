@@ -1,9 +1,12 @@
 package com.jph.imageedittext.sample;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PixelFormat;
+import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 
 import com.bumptech.glide.Glide;
@@ -64,8 +67,23 @@ public class CustomImageEditText extends ImageEditText {
         Glide.with(getContext()).load(netPic.getXUrl()).into(new SimpleTarget<GlideDrawable>() {
             @Override
             public void onResourceReady(GlideDrawable resource, GlideAnimation<? super GlideDrawable> glideAnimation) {
-                onNetImageLoaded(resource, placeImageSpan, netPic);
+                onNetImageLoaded(resource, placeImageSpan);
+//                onNetImageLoaded(drawableToBitmap(resource), placeImageSpan);
             }
         });
+    }
+
+    private Bitmap drawableToBitmap(Drawable drawable) {
+        Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(),
+                drawable.getIntrinsicHeight(),
+                drawable.getOpacity() != PixelFormat.OPAQUE ? Bitmap.Config.ARGB_8888
+                        : Bitmap.Config.RGB_565);
+
+        Canvas canvas = new Canvas(bitmap);
+        drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
+        drawable.draw(canvas);
+
+        return bitmap;
+
     }
 }
