@@ -207,6 +207,9 @@ public abstract class ImageEditText extends EditText {
      * @param list
      */
     public void setPatches(List list) {
+        if (list == null) {
+            return;
+        }
         SpannableStringBuilder ssb = new SpannableStringBuilder("");
         final List<NetPicSpan> placeSpanList = new ArrayList<>();
         for (Object patch :
