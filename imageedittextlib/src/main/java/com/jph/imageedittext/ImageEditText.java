@@ -15,6 +15,8 @@ import android.util.AttributeSet;
 import android.widget.EditText;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -250,6 +252,19 @@ public abstract class ImageEditText extends EditText {
 
     }
 
+    private static class SpanComparator implements Comparator<ISpan> {
+        private Editable editable;
+
+        public SpanComparator(Editable editable) {
+            this.editable = editable;
+        }
+
+        @Override
+        public int compare(ISpan o1, ISpan o2) {
+            return editable.getSpanStart(o1) - editable.getSpanStart(o2);
+        }
+    }
+
     /**
      * 得到所有小块(文字，附件，本地图片)的集合
      *
@@ -259,6 +274,7 @@ public abstract class ImageEditText extends EditText {
         Editable editable = getText();
         //得到所有不是普通文字的数据
         ISpan[] ss = editable.getSpans(0, editable.length(), ISpan.class);
+        Arrays.sort(ss, new SpanComparator(editable));//进行排序，因为默认存储的顺序是按插入的先后
 
         if (editable.length() == 0) {
             //无内容
