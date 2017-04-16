@@ -7,6 +7,7 @@ import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.text.Editable;
+import android.text.InputFilter;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
@@ -16,7 +17,6 @@ import android.widget.EditText;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -44,6 +44,10 @@ public abstract class ImageEditText extends EditText {
 //        setMovementMethod(new ScrollingMovementMethod());
     }
 
+    public void setMaxLength(int maxLength) {
+        setFilters(new InputFilter[]{new LengthInputFilter(maxLength)});
+    }
+
     public void insertNetImage(INetPic netPic) {
         NetPicSpan placeImageSpan = new NetPicSpan(new BitmapDrawable(getResources(),
                 (Bitmap) null), netPic);//为加载图片先占位
@@ -55,15 +59,12 @@ public abstract class ImageEditText extends EditText {
         Editable editable = getEditableText();
 
         if (!selectionStartInLine()) {
-            editable.insert(index, "\n");
+            insert(index, "\n");
             index++;
         }
-        if (index < 0 || index >= editable.length()) {
-            editable.append(spannableString);
-        } else {
-            editable.insert(index, spannableString);
-        }
-        editable.insert(index + spannableString.length(), "\n");
+
+        insert(index, spannableString);
+        insert(index + spannableString.length(), "\n");
 
         loadImage(placeImageSpan);//异步加载图片
     }
@@ -130,15 +131,11 @@ public abstract class ImageEditText extends EditText {
         Editable editable = getEditableText();
 
         if (!selectionStartInLine()) {
-            editable.insert(index, "\n");
+            insert(index, "\n");
             index++;
         }
-        if (index < 0 || index >= editable.length()) {
-            editable.append(spannableString);
-        } else {
-            editable.insert(index, spannableString);
-        }
-        editable.insert(index + spannableString.length(), "\n");
+        insert(index, spannableString);
+        insert(index + spannableString.length(), "\n");
     }
 
     public void insertExtra(IExtra extra) {
@@ -149,15 +146,20 @@ public abstract class ImageEditText extends EditText {
         Editable editable = getEditableText();
 
         if (!selectionStartInLine()) {
-            editable.insert(index, "\n");
+            insert(index, "\n");
             index++;
         }
+        insert(index, spannableString);
+        insert(index + spannableString.length(), "\n");
+    }
+
+    private void insert(int index, CharSequence cs) {
+        Editable editable = getEditableText();
         if (index < 0 || index >= editable.length()) {
-            editable.append(spannableString);
+            editable.append(cs);
         } else {
-            editable.insert(index, spannableString);
+            editable.insert(index, cs);
         }
-        editable.insert(index + spannableString.length(), "\n");
     }
 
     private SpannableString createNetPicSpannable(ISpan placeImageSpan) {
@@ -247,22 +249,13 @@ public abstract class ImageEditText extends EditText {
         //内容追加到输入框内后才开始加载图片
         for (NetPicSpan placeSpan :
                 placeSpanList) {
+            if (getEditableText().getSpanStart(placeSpan) < 0) {
+                //可能因为超出了字数显示并没有被加入到内容中
+                continue;
+            }
             loadImage(placeSpan);
         }
 
-    }
-
-    private static class SpanComparator implements Comparator<ISpan> {
-        private Editable editable;
-
-        public SpanComparator(Editable editable) {
-            this.editable = editable;
-        }
-
-        @Override
-        public int compare(ISpan o1, ISpan o2) {
-            return editable.getSpanStart(o1) - editable.getSpanStart(o2);
-        }
     }
 
     /**

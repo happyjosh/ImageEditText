@@ -19,7 +19,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         final ImageEditText edt = (ImageEditText) findViewById(R.id.main_edt);
-//        edt.setFilters(new InputFilter[]{new InputFilter.LengthFilter(100)});
+        edt.setMaxLength(50);
 
         findViewById(R.id.main_btn_insert_pic_net).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -55,10 +55,11 @@ public class MainActivity extends AppCompatActivity {
                 List list = new ArrayList();
                 String url = "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1491563257433&di=0dbf3410d593767b6c7ad1350ca62fde&imgtype=0&src=http%3A%2F%2Fimg.pconline.com.cn%2Fimages%2Fupload%2Fupc%2Ftx%2Fphotoblog%2F1510%2F08%2Fc4%2F13641017_13641017_1444274038495.jpg";
                 String imgPath = Environment.getExternalStorageDirectory().getPath() + "/test.jpg";
-                for (int i = 0; i < 1; i++) {
+                for (int i = 0; i < 10; i++) {
                     list.add(new NetPic(url));
                     list.add(new LocalPic(imgPath));
-                    list.add("九分裤了圣诞节疯狂了圣诞节疯狂了圣诞节疯狂了圣诞节疯狂就圣诞快乐发简历上岛咖啡饥渴了圣诞节福利圣诞节疯狂了圣诞节分克里斯打飞机 ");
+//                    list.add("九分裤了圣诞节疯狂了圣诞节疯狂了圣诞节疯狂了圣诞节疯狂就圣诞快乐发简历上岛咖啡饥渴了圣诞节福利圣诞节疯狂了圣诞节分克里斯打飞机 ");
+                    list.add("012345678901234567890123456789012345678901234567890000");
                     list.add(new Extra(i, "这是测试帖子" + i));
                 }
                 edt.setPatches(list);
