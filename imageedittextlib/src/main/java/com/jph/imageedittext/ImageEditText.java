@@ -216,15 +216,18 @@ public abstract class ImageEditText extends EditText {
         }
         SpannableStringBuilder ssb = new SpannableStringBuilder("");
         final List<NetPicSpan> placeSpanList = new ArrayList<>();
-        for (Object patch :
-                list) {
+        for (int i = 0, c = list.size(); i < c; i++) {
+            Object patch = list.get(i);
             if (patch instanceof INetPic) {
                 INetPic netPic = (INetPic) patch;
                 Drawable d = new BitmapDrawable(getResources(),
                         (Bitmap) null);
 //                d.setBounds(0, 0, 1, 400);
                 NetPicSpan placeImageSpan = new NetPicSpan(d, netPic);//为加载图片先占位
-                ssb.append("\n");
+                if (i > 0) {
+                    //内容的开始位置不需要换行
+                    ssb.append("\n");
+                }
                 ssb.append(createNetPicSpannable(placeImageSpan));
                 placeSpanList.add(placeImageSpan);
 //                loadImage(placeImageSpan, netPic);
@@ -233,13 +236,22 @@ public abstract class ImageEditText extends EditText {
                 if (localSS == null) {
                     continue;
                 }
-                ssb.append("\n");
+                if (i > 0) {
+                    //内容的开始位置不需要换行
+                    ssb.append("\n");
+                }
                 ssb.append(localSS);
             } else if (patch instanceof IExtra) {
-                ssb.append("\n");
+                if (i > 0) {
+                    //内容的开始位置不需要换行
+                    ssb.append("\n");
+                }
                 ssb.append(createExtraSpannable((IExtra) patch));
             } else if (patch instanceof String) {
-                ssb.append("\n");
+                if (i > 0) {
+                    //内容的开始位置不需要换行
+                    ssb.append("\n");
+                }
                 ssb.append((String) patch);
             }
         }
