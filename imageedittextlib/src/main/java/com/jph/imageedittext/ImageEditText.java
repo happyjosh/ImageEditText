@@ -6,6 +6,8 @@ import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.Spannable;
@@ -18,6 +20,7 @@ import android.widget.EditText;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Executors;
 
 /**
  * 可直接显示图片和附件的EditText
@@ -210,10 +213,64 @@ public abstract class ImageEditText extends EditText {
      *
      * @param list
      */
-    public void setPatches(List list) {
+    public void setPatches(final List list) {
+        setPatches(list, null);
+    }
+
+    /**
+     * 设置分散的内容
+     *
+     * @param list
+     * @param setPatchesCallback 回调
+     */
+    public void setPatches(final List list, final SetPatchesCallback setPatchesCallback) {
+        Executors.newCachedThreadPool().execute(new Runnable() {
+            @Override
+            public void run() {
+                //转换Span的过程放到子线程，可能会有压缩图片扥耗时操作
+                final PatchesSSB patchesSSB = getPatchesSSB(list);
+
+                //切回主线程
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (patchesSSB == null) {
+                            if (setPatchesCallback != null) {
+                                setPatchesCallback.onFinished();
+                            }
+                            return;
+                        }
+
+                        setText(patchesSSB.getSsb());
+
+                        //内容追加到输入框内后才开始加载图片
+                        for (NetPicSpan placeSpan :
+                                patchesSSB.getPlaceSpanList()) {
+                            if (getEditableText().getSpanStart(placeSpan) < 0) {
+                                //可能因为超出了字数显示并没有被加入到内容中
+                                continue;
+                            }
+                            loadImage(placeSpan);
+                        }
+
+                        if (setPatchesCallback != null) {
+                            setPatchesCallback.onFinished();
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    public interface SetPatchesCallback {
+        void onFinished();
+    }
+
+    private PatchesSSB getPatchesSSB(List list) {
         if (list == null) {
-            return;
+            return null;
         }
+
         SpannableStringBuilder ssb = new SpannableStringBuilder("");
         final List<NetPicSpan> placeSpanList = new ArrayList<>();
         for (int i = 0, c = list.size(); i < c; i++) {
@@ -256,18 +313,7 @@ public abstract class ImageEditText extends EditText {
             }
         }
 
-        setText(ssb);
-
-        //内容追加到输入框内后才开始加载图片
-        for (NetPicSpan placeSpan :
-                placeSpanList) {
-            if (getEditableText().getSpanStart(placeSpan) < 0) {
-                //可能因为超出了字数显示并没有被加入到内容中
-                continue;
-            }
-            loadImage(placeSpan);
-        }
-
+        return new PatchesSSB(ssb, placeSpanList);
     }
 
     /**

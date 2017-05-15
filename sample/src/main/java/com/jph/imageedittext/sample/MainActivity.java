@@ -62,7 +62,13 @@ public class MainActivity extends AppCompatActivity {
                     list.add("012345678901234567890123456789012345678901234567890000");
                     list.add(new Extra(i, "这是测试帖子" + i));
                 }
-                edt.setPatches(list);
+                //You can show loading in here
+                edt.setPatches(list, new ImageEditText.SetPatchesCallback() {
+                    @Override
+                    public void onFinished() {
+                        //You can hide loading in here
+                    }
+                });
             }
         });
 

@@ -7,7 +7,7 @@
 使用方式
 
 ```java
-compile 'com.jph:imageedittextlib:1.1.3'
+compile 'com.jph:imageedittextlib:1.1.4'
 ```
 
 ```java
@@ -27,6 +27,12 @@ for (int i = 0; i < 10; i++) {
     list.add("普通文字普通文字");
     list.add(new Extra(i, "这是测试帖子" + i));
 }
-edt.setPatches(list);
 
+//You can show loading in here
+edt.setPatches(list, new ImageEditText.SetPatchesCallback(){
+    @Override
+    public void onFinished() {
+        //You can hide loading in here
+    }
+});
 ```
