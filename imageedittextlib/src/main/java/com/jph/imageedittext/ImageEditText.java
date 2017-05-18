@@ -118,8 +118,14 @@ public abstract class ImageEditText extends EditText {
         Editable editable = getEditableText();
         int start = editable.getSpanStart(placeImageSpan);
         int end = editable.getSpanEnd(placeImageSpan);
-        getEditableText().replace(start, end, spannableString);
+        if (start < 0 || end < 0) {
+            return;
+        }
+        editable.replace(start, end, spannableString);
         editable.removeSpan(placeImageSpan);
+        //每次下载图片成功后重新setText不然多张图片显示可能会乱，span排序是按插入的顺序，
+        // 而异步下载的图片，不能保证按位置顺序插入
+        setText(editable);
     }
 
 
