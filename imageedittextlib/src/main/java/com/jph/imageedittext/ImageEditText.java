@@ -12,7 +12,6 @@ import android.text.Editable;
 import android.text.InputFilter;
 import android.text.Spannable;
 import android.text.SpannableString;
-import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.widget.EditText;
@@ -67,7 +66,7 @@ public abstract class ImageEditText extends EditText {
         }
 
         insert(index, spannableString);
-        insert(index + spannableString.length(), "\n");
+        insert(index + spannableString.length(), "\n\n");
 
         loadImage(placeImageSpan);//异步加载图片
     }
@@ -144,7 +143,7 @@ public abstract class ImageEditText extends EditText {
             index++;
         }
         insert(index, spannableString);
-        insert(index + spannableString.length(), "\n");
+        insert(index + spannableString.length(), "\n\n");
     }
 
     public void insertExtra(IExtra extra) {
@@ -171,14 +170,14 @@ public abstract class ImageEditText extends EditText {
         }
     }
 
-    private SpannableString createNetPicSpannable(ISpan placeImageSpan) {
+    SpannableString createNetPicSpannable(ISpan placeImageSpan) {
         SpannableString spannableString = new SpannableString(placeImageSpan.getReplaceCode());
         spannableString.setSpan(placeImageSpan, 0, placeImageSpan.getReplaceCode().length(),
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
         return spannableString;
     }
 
-    private SpannableString createLocalPicSpannable(ILocalPic pic) {
+    SpannableString createLocalPicSpannable(ILocalPic pic) {
         Bitmap loadedImage = BitmapFactory.decodeFile(pic.getXPath());
         if (loadedImage == null) {
             return null;
@@ -195,7 +194,7 @@ public abstract class ImageEditText extends EditText {
         return spannableString;
     }
 
-    private SpannableString createExtraSpannable(IExtra extra) {
+    SpannableString createExtraSpannable(IExtra extra) {
         ISpan extraSpan = createExtraSpan(extra);
         String replaceCode = extraSpan.getReplaceCode();
         SpannableString spannableString = new SpannableString(replaceCode);
@@ -234,7 +233,8 @@ public abstract class ImageEditText extends EditText {
             @Override
             public void run() {
                 //转换Span的过程放到子线程，可能会有压缩图片扥耗时操作
-                final PatchesSSB patchesSSB = getPatchesSSB(list);
+                final PatchesSSB patchesSSB = new PatchesSSBTransformer(ImageEditText.this, list)
+                        .getPatchesSSB();
 
                 //切回主线程
                 new Handler(Looper.getMainLooper()).post(new Runnable() {
@@ -270,56 +270,6 @@ public abstract class ImageEditText extends EditText {
 
     public interface SetPatchesCallback {
         void onFinished();
-    }
-
-    private PatchesSSB getPatchesSSB(List list) {
-        if (list == null) {
-            return null;
-        }
-
-        SpannableStringBuilder ssb = new SpannableStringBuilder("");
-        final List<NetPicSpan> placeSpanList = new ArrayList<>();
-        for (int i = 0, c = list.size(); i < c; i++) {
-            Object patch = list.get(i);
-            if (patch instanceof INetPic) {
-                INetPic netPic = (INetPic) patch;
-                Drawable d = new BitmapDrawable(getResources(),
-                        (Bitmap) null);
-//                d.setBounds(0, 0, 1, 400);
-                NetPicSpan placeImageSpan = new NetPicSpan(d, netPic);//为加载图片先占位
-                if (i > 0) {
-                    //内容的开始位置不需要换行
-                    ssb.append("\n");
-                }
-                ssb.append(createNetPicSpannable(placeImageSpan));
-                placeSpanList.add(placeImageSpan);
-//                loadImage(placeImageSpan, netPic);
-            } else if (patch instanceof ILocalPic) {
-                SpannableString localSS = createLocalPicSpannable((ILocalPic) patch);
-                if (localSS == null) {
-                    continue;
-                }
-                if (i > 0) {
-                    //内容的开始位置不需要换行
-                    ssb.append("\n");
-                }
-                ssb.append(localSS);
-            } else if (patch instanceof IExtra) {
-                if (i > 0) {
-                    //内容的开始位置不需要换行
-                    ssb.append("\n");
-                }
-                ssb.append(createExtraSpannable((IExtra) patch));
-            } else if (patch instanceof String) {
-                if (i > 0) {
-                    //内容的开始位置不需要换行
-                    ssb.append("\n");
-                }
-                ssb.append((String) patch);
-            }
-        }
-
-        return new PatchesSSB(ssb, placeSpanList);
     }
 
     /**
@@ -359,7 +309,10 @@ public abstract class ImageEditText extends EditText {
                 }
             } else if (i != 0 && start > previousEnd) {
                 //不是第一个碎片&&且和上一个碎片之间有普通文字
-                String patch = trimEnter(editable.subSequence(previousEnd, start).toString());
+                ISpan previousS = ss[i - 1];//上一个span
+                boolean isAfterPic = previousS instanceof LocalPicSpan ||
+                        previousS instanceof NetPicSpan;//该段文字是否紧贴图片之后
+                String patch = trimEnter(isAfterPic, editable.subSequence(previousEnd, start).toString());
                 if (!TextUtils.isEmpty(patch)) {
                     list.add(patch);
                 }
@@ -369,7 +322,9 @@ public abstract class ImageEditText extends EditText {
 
             if (i == ss.length - 1 && end < editable.length()) {
                 //最后一个碎片&&它后面有文字
-                String patch = trimStartEnter(editable.subSequence(end, editable.length()).toString());
+
+                boolean isAfterPic = s instanceof LocalPicSpan || s instanceof NetPicSpan;//该段文字是否紧贴图片之后
+                String patch = trimStartEnter(isAfterPic, editable.subSequence(end, editable.length()).toString());
                 if (!TextUtils.isEmpty(patch)) {
                     list.add(patch);
                 }
@@ -399,21 +354,25 @@ public abstract class ImageEditText extends EditText {
     /**
      * 去除开始和结尾的换行符
      *
+     * @param isAfterPic 是否紧贴图片后面
      * @param str
      * @return
      */
-    private String trimEnter(String str) {
-        return trimEndEnter(trimStartEnter(str));
+    private String trimEnter(boolean isAfterPic, String str) {
+        return trimEndEnter(trimStartEnter(isAfterPic, str));
     }
 
     /**
      * 去除开始的换行符
      *
+     * @param isAfterPic 是否紧贴图片后面
      * @param str
      * @return
      */
-    private String trimStartEnter(String str) {
-        if (str.startsWith("\n")) {
+    private String trimStartEnter(boolean isAfterPic, String str) {
+        if (isAfterPic && str.startsWith("\n\n")) {
+            return str.substring(2, str.length());
+        } else if (str.startsWith("\n")) {
             return str.substring(1, str.length());
         }
 
